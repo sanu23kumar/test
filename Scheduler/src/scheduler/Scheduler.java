@@ -7,7 +7,7 @@ public class Scheduler {
         DBHandling db = new DBHandling();
         //db.newUser(1, "sanu", "kumar2010", "sanu");
         //db.deleteUser(1);
-        db.addASubject(1, 1, "Maths", 0, "", "");
+        //db.addASubject(1, 1, "Maths", 0, "", "");
     }
     
 }
