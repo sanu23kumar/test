@@ -1,6 +1,11 @@
 package scheduler;
 
 import java.sql.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,19 +20,21 @@ public class DBHandling {
         System.out.println("I'm here");
         try {
             //For Windows, use
-            //Class.forName("com.mysql.jdbc.Driver");
-            //co=DriverManager.getConnection("jdbc:mysql://localhost:3306/yeah","root","");
-            co = DriverManager.getConnection("jdbc:mysql://localhost:3306/"+"sanu"+"?autoReconnect=true&useSSL=false", "root", "kumar2010");//For mac
+            Class.forName("com.mysql.jdbc.Driver");
+            co=DriverManager.getConnection("jdbc:mysql://localhost:3306/yeah","root","");
+            //co = DriverManager.getConnection("jdbc:mysql://localhost:3306/"+"sanu"+"?autoReconnect=true&useSSL=false", "root", "kumar2010");//For mac
             st = co.createStatement();
             
             st.execute("create table if not exists user(id int not null primary key auto_increment, username varchar(20) not null,  password varchar(100) not null, name varchar(20) not null)");
             
             
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(DBHandling.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     }
+    
+    //connection closed in Scheduler.java
     
     void addASubject(int id, int S_ID, String S_Name, int S_Priority, String S_Time){
         
@@ -35,10 +42,9 @@ public class DBHandling {
         {
 
             st.executeUpdate("insert into " + id + "_UserSubjects values(" + S_ID + ",'" + S_Name + "'," + S_Priority + ",'" + S_Time + "')");
-            st.execute("ALTER TABLE "+ id +"_TimeSchedule ADD " + S_Name + S_ID + " varchar(20)");
-            
-            st.close();
-            co.close();
+            st.executeUpdate("ALTER TABLE "+ id +"_TimeSchedule ADD " + S_Name + S_ID + " varchar(50)");
+//            co.close();
+//            st.close();
         }
         catch (SQLException ex)
         {
@@ -52,10 +58,10 @@ public class DBHandling {
         {
 
             st.executeUpdate("delete from " + id + "_UserSubjects where S_ID = " + S_ID);
-            st.execute("ALTER TABLE "+ id +"_TimeSchedule DROP COLUMN " + S_Name + S_ID + " varchar(20)");
+            st.execute("ALTER TABLE "+ id +"_TimeSchedule DROP COLUMN " + S_Name + "," + S_ID + " varchar(20)");
             
-            st.close();
-            co.close();
+//            st.close();
+//            co.close();
         }
         catch (SQLException ex)
         {
@@ -63,18 +69,22 @@ public class DBHandling {
         }
     }    
     
-    void scheduleSubjectsTime(int id) throws SQLException{
+    void scheduleSubjectsTime(int id) throws Exception{
         
-        String[] startTimeWeekdays = {"'6:00 to 7:00'", "'7:00 to 8:30'", "'9:00 to 10:30'"};       //To be changed Later after asking user preferences
-        String[] startTimeWeekends = {"'8:00 to 10:00'", "'13:00 to 15:00'", "'9:00 to 10:30'"};
+        String[] startTimeWeekdays = {"6:00 to 7:00", "7:00 to 8:30", "9:00 to 10:30"};       //To be changed Later after asking user preferences
+        String[] startTimeWeekends = {"8:00 to 10:00", "13:00 to 15:00", "9:00 to 10:30"};
         int daysToTest = 30, numberOfSubjects, maxPriority = 3;
+        LocalDate localDate = LocalDate.now();
         
         ArrayList priorityList = new ArrayList();
         ArrayList temporaryPriorityList = new ArrayList();
-        
+        ArrayList columnData = new ArrayList();
+        ArrayList time = new ArrayList();
+
         rs = st.executeQuery("select * from " + id + "_UserSubjects");
         while (rs.next()) {
             priorityList.add(rs.getInt("S_Priority"));
+            columnData.add(rs.getString("S_Name").concat(rs.getString("S_ID")));
         }
         rs = null;
         
@@ -91,7 +101,7 @@ public class DBHandling {
             int selectedSubjects = 00000, subjects = 0, current = 0;       //Assuming 5 subjects
             
             while (subjects < 3) {                
-                
+//                System.out.println(temporaryPriorityList.get(0));
                 if ((int)temporaryPriorityList.get(current) == maxPriority) {
                     
                     selectedSubjects += Math.pow(10, current);
@@ -105,37 +115,69 @@ public class DBHandling {
                     
                 }
                 
-                if (current<priorityList.size()) {
+                if (current<priorityList.size()-1) {
                     current++;
                 } else {
                     current = 0;
                 }
-                
+        
             }
             
             try {
                 int allotCount = 0;
+                
+                //insert date in table.
+                LocalDate scheDate = localDate.plus(scheduleDate,ChronoUnit.DAYS);
+//                System.out.println(scheDate);
+
+                st.executeUpdate("insert into "+id + "_TimeSchedule(date) values('"+scheDate+"')");
+               
+                        
 
                 String scheduleString = scheduleDate + ", ";
                 for (int i = 0; i < priorityList.size(); i++) {
                     int temp = (int) (selectedSubjects % 10);
                     selectedSubjects /= 10;
-                    if (temp != 0) {
+                    if (temp != 0) { 
+                        //check later for scheduleDate and Starting day
                         if((scheduleDate+startingDay)%6==0 || (scheduleDate+startingDay)%7==0){
                             scheduleString = scheduleString.concat(startTimeWeekends[allotCount] + ", ");
+                            time.add(startTimeWeekdays[allotCount]);
                         } else {
                             scheduleString = scheduleString.concat(startTimeWeekdays[allotCount] + ", ");
+                            time.add(startTimeWeekdays[allotCount]);
                         }
                         allotCount++;
                     } else {
                         scheduleString = scheduleString.concat("-, ");
+                        time.add(startTimeWeekdays[allotCount]);
+
                     }
                     
-                    scheduleString = scheduleString.substring(0, scheduleString.length() - 3);
+                    scheduleString = scheduleString.substring(1, scheduleString.length() - 1);
                 }
-
-                st.executeUpdate("insert into " + id + "_TimeSchedule values" + scheduleString);
-            } catch (SQLException ex) {
+                
+                
+             
+             
+             
+                
+                
+//                System.out.printf(scheduleString + " subject changed");
+//                System.out.println(time);
+//                System.out.println(columnData.get(0));
+                for(int i=0;i<columnData.size();i++){
+                    st.executeUpdate("update " + id + "_TimeSchedule set " + columnData.get(is)+ "='" + time.get(i) + "' where date = '"+scheDate+"'");
+//                    System.out.println(columnData.get(i)+" "+time.get(i));
+                }     
+                
+                
+                
+                
+                
+                
+                
+            } catch (Exception ex) {
                 Logger.getLogger(DBHandling.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -147,8 +189,7 @@ public class DBHandling {
             st.execute("create table " + id + "_UserSubjects" + "(S_ID int Primary Key, S_Name varchar(40), S_Priority int, S_Time varchar(40))");
             st.execute("create table " + id + "_TimeSchedule" + "(date date Primary Key)");
 
-            st.close();
-            co.close();
+//            st.close();
         } catch (SQLException ex) {
             Logger.getLogger(DBHandling.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -166,8 +207,10 @@ public class DBHandling {
         
         rs = st.executeQuery("select * from "+id+"_TimeSchedule");
         ResultSetMetaData rm = rs.getMetaData();
+        
         int columns = rm.getColumnCount();
         int count = 0;
+        
         ArrayList<ArrayList<Object>> subjectTimings= new ArrayList<>();
         ArrayList<Object> subjectTiming = new ArrayList<>();
         
