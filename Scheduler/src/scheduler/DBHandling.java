@@ -69,104 +69,101 @@ public class DBHandling {
         }
     }    
     
-    void scheduleSubjectsTime(int id) throws Exception{
+    void scheduleSubjectsTime(int id){
         
-        String[] startTimeWeekdays = {"6:00 to 7:00", "7:00 to 8:30", "9:00 to 10:30"};       //To be changed Later after asking user preferences
-        String[] startTimeWeekends = {"8:00 to 10:00", "13:00 to 15:00", "9:00 to 10:30"};
-        int daysToTest = 30, numberOfSubjects, maxPriority = 3;
-        LocalDate localDate = LocalDate.now();
-        
-        ArrayList priorityList = new ArrayList();
-        ArrayList temporaryPriorityList = new ArrayList();
-        ArrayList columnData = new ArrayList();
-        ArrayList time = new ArrayList();
-
-        rs = st.executeQuery("select * from " + id + "_UserSubjects");
-        while (rs.next()) {
-            priorityList.add(rs.getInt("S_Priority"));
-            columnData.add(rs.getString("S_Name").concat(rs.getString("S_ID")));
-        }
-        rs = null;
-        
-        priorityList.forEach((object) -> {
-            temporaryPriorityList.add(object);
-        });
-        
-        numberOfSubjects = priorityList.size();
-        
-        //Assuming starting day is monday
-        int startingDay = 0;
-        for (int scheduleDate = 0; scheduleDate < daysToTest; scheduleDate++) {
-            
-            int selectedSubjects = 00000, subjects = 0, current = 0;       //Assuming 5 subjects
-            
-            while (subjects < 3) {                
+        try {
+            String[] startTimeWeekdays = {"6:00 to 7:00", "7:00 to 8:30", "9:00 to 10:30"};       //To be changed Later after asking user preferences
+            String[] startTimeWeekends = {"8:00 to 10:00", "13:00 to 15:00", "9:00 to 10:30"};
+            int daysToTest = 30, numberOfSubjects, maxPriority = 3;
+            LocalDate localDate = LocalDate.now();
+            ArrayList priorityList = new ArrayList();
+            ArrayList temporaryPriorityList = new ArrayList();
+            ArrayList columnData = new ArrayList();
+            ArrayList time = new ArrayList();
+            rs = st.executeQuery("select * from " + id + "_UserSubjects");
+            while (rs.next()) {
+                priorityList.add(rs.getInt("S_Priority"));
+                columnData.add(rs.getString("S_Name").concat(rs.getString("S_ID")));
+            }   rs = null;
+            priorityList.forEach((object) -> {
+                temporaryPriorityList.add(object);
+            }); numberOfSubjects = priorityList.size();
+            //Assuming starting day is monday
+            int startingDay = 0;
+            for (int scheduleDate = 0; scheduleDate < daysToTest; scheduleDate++) {
+                
+                int selectedSubjects = 00000, subjects = 0, current = 0;       //Assuming 5 subjects
+                
+                while (subjects < 3) {                
 //                System.out.println(temporaryPriorityList.get(0));
-                if ((int)temporaryPriorityList.get(current) == maxPriority) {
-                    
-                    selectedSubjects += Math.pow(10, current);
-                    
-                    temporaryPriorityList.set(current, priorityList.get(current));
-                    subjects++;
-                    
-                } else {
-                    
-                    temporaryPriorityList.set(current, (int) (temporaryPriorityList.get(current))+1);
-                    
+if ((int)temporaryPriorityList.get(current) == maxPriority) {
+    
+    selectedSubjects += Math.pow(10, current);
+    
+    temporaryPriorityList.set(current, priorityList.get(current));
+    subjects++;
+    
+} else {
+    
+    temporaryPriorityList.set(current, (int) (temporaryPriorityList.get(current))+1);
+    
+}
+
+if (current<priorityList.size()-1) {
+    current++;
+} else {
+    current = 0;
+}
+
                 }
                 
-                if (current<priorityList.size()-1) {
-                    current++;
-                } else {
-                    current = 0;
-                }
-        
-            }
-            
-            try {
-                int allotCount = 0;
-                
-                //insert date in table.
-                LocalDate scheDate = localDate.plus(scheduleDate,ChronoUnit.DAYS);
+                try {
+                    int allotCount = 0;
+                    
+                    //insert date in table.
+                    LocalDate scheDate = localDate.plus(scheduleDate,ChronoUnit.DAYS);
 //                System.out.println(scheDate);
 
-                st.executeUpdate("insert into "+id + "_TimeSchedule(date) values('"+scheDate+"')");
-               
-                        
+st.executeUpdate("insert into "+id + "_TimeSchedule(date) values('"+scheDate+"')");
 
-                String scheduleString = scheduleDate + ", ";
-                for (int i = 0; i < priorityList.size(); i++) {
-                    int temp = (int) (selectedSubjects % 10);
-                    selectedSubjects /= 10;
-                    if (temp != 0) { 
-                        //check later for scheduleDate and Starting day
-                        if((scheduleDate+startingDay)%6==0 || (scheduleDate+startingDay)%7==0){
-                            scheduleString = scheduleString.concat(startTimeWeekends[allotCount] + ", ");
-                            time.add(startTimeWeekdays[allotCount]);
-                        } else {
-                            scheduleString = scheduleString.concat(startTimeWeekdays[allotCount] + ", ");
-                            time.add(startTimeWeekdays[allotCount]);
-                        }
-                        allotCount++;
-                    } else {
-                        scheduleString = scheduleString.concat("-, ");
-                        time.add(startTimeWeekdays[allotCount]);
 
-                    }
-                    
-                    scheduleString = scheduleString.substring(1, scheduleString.length() - 1);
-                }
-                
+
+String scheduleString = scheduleDate + ", ";
+for (int i = 0; i < priorityList.size(); i++) {
+    int temp = (int) (selectedSubjects % 10);
+    selectedSubjects /= 10;
+    if (temp != 0) {
+        //check later for scheduleDate and Starting day
+        if((scheduleDate+startingDay)%6==0 || (scheduleDate+startingDay)%7==0){
+            scheduleString = scheduleString.concat(startTimeWeekends[allotCount] + ", ");
+            time.add(startTimeWeekdays[allotCount]);
+        } else {
+            scheduleString = scheduleString.concat(startTimeWeekdays[allotCount] + ", ");
+            time.add(startTimeWeekdays[allotCount]);
+        }
+        allotCount++;
+    } else {
+        scheduleString = scheduleString.concat("-, ");
+        time.add(startTimeWeekdays[allotCount]);
+        
+    }
+    
+    scheduleString = scheduleString.substring(1, scheduleString.length() - 1);
+}
+
 //                System.out.printf(scheduleString + " subject changed");
 //                System.out.println(time);
 //                System.out.println(columnData.get(0));
-                for(int i=0;i<columnData.size();i++){
-                    st.executeUpdate("update " + id + "_TimeSchedule set " + columnData.get(i)+ "='" + time.get(i) + "' where date = '"+scheDate+"'");
+for(int i=0;i<columnData.size();i++){
+    st.executeUpdate("update " + id + "_TimeSchedule set " + columnData.get(i)+ "='" + time.get(i) + "' where date = '"+scheDate+"'");
 //                    System.out.println(columnData.get(i)+" "+time.get(i));
-                }    
-            } catch (Exception ex) {
-                Logger.getLogger(DBHandling.class.getName()).log(Level.SEVERE, null, ex);
+}
+                } catch (Exception ex) {
+                    Logger.getLogger(DBHandling.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(DBHandling.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -212,5 +209,5 @@ public class DBHandling {
         return subjectTimings;
         
     }
-
+    
 }
