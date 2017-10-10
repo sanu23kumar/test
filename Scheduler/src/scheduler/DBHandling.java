@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -83,25 +84,25 @@ public class DBHandling {
                 columnData.add(rs.getString("S_Name").concat(rs.getString("S_ID")));
             }
             
-            System.out.println(priorityList);
-            System.out.println(columnData);
             
             rs = null;
             priorityList.forEach((object) -> {
                 temporaryPriorityList.add(object);
             });
             numberOfSubjects = priorityList.size();
+            
             //Assuming starting day is monday
             int startingDay = 0;
             for (int scheduleDate = 0; scheduleDate < daysToTest; scheduleDate++) {
+               
+                int subjects = 0, current = 0;       //Assuming 5 subjects
+                int[] selectedSubjects = {0, 0, 0, 0, 0};
 
-                int selectedSubjects = 00000, subjects = 0, current = 0;       //Assuming 5 subjects
-
-                while (subjects < 3) {
+                while (subjects < 2) {
 //                System.out.println(temporaryPriorityList.get(0));
                     if ((int) temporaryPriorityList.get(current) == maxPriority) {
 
-                        selectedSubjects += Math.pow(10, current);
+                        selectedSubjects[current] = 1;
 
                         temporaryPriorityList.set(current, priorityList.get(current));
                         subjects++;
@@ -119,20 +120,23 @@ public class DBHandling {
                     }
 
                 }
-
+                
+                System.out.println(Arrays.toString(selectedSubjects));
+                
                 try {
                     int allotCount = 0;
 
                     //insert date in table.
                     LocalDate scheDate = localDate.plus(scheduleDate, ChronoUnit.DAYS);
+                    System.out.println(scheDate.getDayOfWeek());
 //                System.out.println(scheDate);
 
                     st.executeUpdate("insert into " + id + "_TimeSchedule(date) values('" + scheDate + "')");
 
                     String scheduleString = scheduleDate + ", ";
                     for (int i = 0; i < priorityList.size(); i++) {
-                        int temp = (int) (selectedSubjects % 10);
-                        selectedSubjects /= 10;
+                        int temp = selectedSubjects[i];
+                        
                         if (temp != 0) {
                             //check later for scheduleDate and Starting day
                             if ((scheduleDate + startingDay) % 6 == 0 || (scheduleDate + startingDay) % 7 == 0) {
