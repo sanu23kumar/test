@@ -21,9 +21,9 @@ public class DBHandling {
         
         try {
             //For Windows, use
-            //Class.forName("com.mysql.jdbc.Driver");
-            //co=DriverManager.getConnection("jdbc:mysql://localhost:3306/yeah","root","");
-            co = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + "sanu" + "?autoReconnect=true&useSSL=false", "root", "kumar2010");//For mac
+            Class.forName("com.mysql.jdbc.Driver");
+            co=DriverManager.getConnection("jdbc:mysql://localhost:3306/yeah","root","");
+//            co = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + "sanu" + "?autoReconnect=true&useSSL=false", "root", "kumar2010");//For mac
             st = co.createStatement();
 
             st.execute("create table if not exists user(id int not null primary key auto_increment, username varchar(20) not null,  password varchar(100) not null, name varchar(20) not null)");
@@ -76,7 +76,6 @@ public class DBHandling {
             ArrayList priorityList = new ArrayList();
             ArrayList temporaryPriorityList = new ArrayList();
             ArrayList columnData = new ArrayList();
-            ArrayList time = new ArrayList();
             
             rs = st.executeQuery("select * from " + id + "_UserSubjects");
             while (rs.next()) {
@@ -98,7 +97,7 @@ public class DBHandling {
                 int subjects = 0, current = 0;       //Assuming 5 subjects
                 int[] selectedSubjects = {0, 0, 0, 0, 0};
 
-                while (subjects < 2) {
+                while (subjects < 3) {
 //                System.out.println(temporaryPriorityList.get(0));
                     if ((int) temporaryPriorityList.get(current) == maxPriority) {
 
@@ -121,40 +120,36 @@ public class DBHandling {
 
                 }
                 
-                System.out.println(Arrays.toString(selectedSubjects));
+//                System.out.println(Arrays.toString(selectedSubjects));
                 
                 try {
                     int allotCount = 0;
 
                     //insert date in table.
                     LocalDate scheDate = localDate.plus(scheduleDate, ChronoUnit.DAYS);
-                    System.out.println(scheDate.getDayOfWeek());
+//                    System.out.println(scheDate.getDayOfWeek());
 //                System.out.println(scheDate);
 
                     st.executeUpdate("insert into " + id + "_TimeSchedule(date) values('" + scheDate + "')");
 
-                    String scheduleString = scheduleDate + ", ";
+                    ArrayList time = new ArrayList();
                     for (int i = 0; i < priorityList.size(); i++) {
                         int temp = selectedSubjects[i];
                         
                         if (temp != 0) {
                             //check later for scheduleDate and Starting day
                             if ((scheduleDate + startingDay) % 6 == 0 || (scheduleDate + startingDay) % 7 == 0) {
-                                scheduleString = scheduleString.concat(startTimeWeekends[allotCount] + ", ");
                                 time.add(startTimeWeekdays[allotCount]);
                             } else {
-                                scheduleString = scheduleString.concat(startTimeWeekdays[allotCount] + ", ");
                                 time.add(startTimeWeekdays[allotCount]);
                             }
                             allotCount++;
                         } else {
-                            scheduleString = scheduleString.concat("-, ");
-                            time.add(startTimeWeekdays[allotCount]);
-                            System.out.print(allotCount);
+                            time.add('-');
+//                            System.out.print(allotCount);
 
                         }
 
-                        scheduleString = scheduleString.substring(1, scheduleString.length() - 1);
                     }
 
 //                System.out.printf(scheduleString + " subject changed");
