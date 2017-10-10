@@ -96,9 +96,9 @@ public class DBHandling {
             for (int scheduleDate = 0; scheduleDate < daysToTest; scheduleDate++) {
                
                 int subjects = 0, current = 0;       //Assuming 5 subjects
-                int[] selectedSubjects = {0, 0, 0, 0, 0};
+                int[] selectedSubjects = {0, 0, 0, 0, 0};       //Change this to multiple subjects
 
-                while (subjects < 2) {
+                while (subjects < 3) {
 //                System.out.println(temporaryPriorityList.get(0));
                     if ((int) temporaryPriorityList.get(current) == maxPriority) {
 
@@ -121,7 +121,7 @@ public class DBHandling {
 
                 }
                 
-                System.out.println(Arrays.toString(selectedSubjects));
+                //System.out.println(Arrays.toString(selectedSubjects));
                 
                 try {
                     int allotCount = 0;
@@ -149,7 +149,7 @@ public class DBHandling {
                             allotCount++;
                         } else {
                             scheduleString = scheduleString.concat("-, ");
-                            time.add(startTimeWeekdays[allotCount]);
+                            time.add("-");
                             System.out.print(allotCount);
 
                         }
