@@ -20,9 +20,9 @@ public class DBHandling {
         System.out.println("I'm here");
         try {
             //For Windows, use
-            Class.forName("com.mysql.jdbc.Driver");
-            co=DriverManager.getConnection("jdbc:mysql://localhost:3306/yeah","root","");
-            //co = DriverManager.getConnection("jdbc:mysql://localhost:3306/"+"sanu"+"?autoReconnect=true&useSSL=false", "root", "kumar2010");//For mac
+            //Class.forName("com.mysql.jdbc.Driver");
+            //co=DriverManager.getConnection("jdbc:mysql://localhost:3306/yeah","root","");
+            co = DriverManager.getConnection("jdbc:mysql://localhost:3306/"+"sanu"+"?autoReconnect=true&useSSL=false", "root", "kumar2010");//For mac
             st = co.createStatement();
             
             st.execute("create table if not exists user(id int not null primary key auto_increment, username varchar(20) not null,  password varchar(100) not null, name varchar(20) not null)");
@@ -157,26 +157,13 @@ public class DBHandling {
                     scheduleString = scheduleString.substring(1, scheduleString.length() - 1);
                 }
                 
-                
-             
-             
-             
-                
-                
 //                System.out.printf(scheduleString + " subject changed");
 //                System.out.println(time);
 //                System.out.println(columnData.get(0));
                 for(int i=0;i<columnData.size();i++){
-                    st.executeUpdate("update " + id + "_TimeSchedule set " + columnData.get(is)+ "='" + time.get(i) + "' where date = '"+scheDate+"'");
+                    st.executeUpdate("update " + id + "_TimeSchedule set " + columnData.get(i)+ "='" + time.get(i) + "' where date = '"+scheDate+"'");
 //                    System.out.println(columnData.get(i)+" "+time.get(i));
-                }     
-                
-                
-                
-                
-                
-                
-                
+                }    
             } catch (Exception ex) {
                 Logger.getLogger(DBHandling.class.getName()).log(Level.SEVERE, null, ex);
             }
